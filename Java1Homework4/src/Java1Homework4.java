@@ -1,24 +1,24 @@
-﻿import java.util.Arrays;
+import java.util.Arrays;
 import java.util.Random;
 import java.util.Scanner;
 
 /**
- * @authors S.Iryupin, A.Usmanov
  * @version dated Jul,25 2018
- *
+ * <p>
  * В исходном коде проведены следующие изменения:
  * Добавлен общий массив ячеек (каждая ячейка это массив из трех значений - маркер, адрес,приоритет)
  * Добавлена регистрация ходов в массиве свободных ячеек (в нем ссылки на свободные ячейки)
  * Добавлены массивы выигрышных вариантов для игрока и AI, при регитрации хода удаляются варианты противника
  * Добавлена опция для начала игры компьютером (константа FIRST_MOVE)
- *
+ * <p>
  * Алгоритм работы AI:
  * 1) ищем свой выигрышный ход, если есть делаем его
  * 2) ищем выигрышной ход противника, если есть  - закрываем
  * 3) ищем свободные ячейки из играющих вариантов противника и своих с наибольшим количеством значений, делаем пересечение и случайно выбираем ячейку, если диапазоны не пересекаются, то пытаемся выбрать из играющего варианта противника, если у него ничего не играет, то выбираем свое (играем от обороны)
  * 4) если по каким то причинам логика выше не сработала (например начало игры), то берем случайную свободную ячейку
  * Алгоритм так себе, но видимость борьбы создает, на польших полях, например по правилам рэндзю (поле 15x15  - пять в ряд)  даже выигрывает. На поле 3x3 весьма предсказуем и победить его труда не составляет
-  */
+ * @authors S.Iryupin, A.Usmanov
+ */
 class Java1Homework4 {
 
     final int SIZE = 15;
@@ -51,7 +51,7 @@ class Java1Homework4 {
         initVariants();
         int turn = 0;
         while (true) {
-            if (FIRST_MOVE==PLAYER_VALUE || turn++>0) {
+            if (FIRST_MOVE == PLAYER_VALUE || turn++ > 0) {
                 humanTurn();
                 if (checkWin(DOT_X)) {
                     System.out.println("YOU WON!");
@@ -236,106 +236,110 @@ class Java1Homework4 {
     private int getRandomPosition() {
         return freeCells[rand.nextInt(freeCells.length)][IDX_ADDRESS];
     }
+
     private int getWinPosition(int value) {
         int pos = -1;
-        int[][][] variants = (value==PLAYER_VALUE)?playerVariants:aiVariants;
-        for (int[][] variant:variants) {
-            if (variant==null) continue;
+        int[][][] variants = (value == PLAYER_VALUE) ? playerVariants : aiVariants;
+        for (int[][] variant : variants) {
+            if (variant == null) continue;
 
             int toWin = WIN_SIZE;
             int emptyPos = -1;
-            for (int[] cell:variant) {
-                if (cell[IDX_VALUE]==value) {
+            for (int[] cell : variant) {
+                if (cell[IDX_VALUE] == value) {
                     toWin--;
-                }
-                else if (cell[IDX_VALUE]==EMPTY_VALUE) {
+                } else if (cell[IDX_VALUE] == EMPTY_VALUE) {
                     emptyPos = cell[IDX_ADDRESS];
                 }
             }
-            if (toWin<2 && emptyPos>-1) { //вторая проверка излишняя, но пусть будет
+            if (toWin < 2 && emptyPos > -1) { //вторая проверка излишняя, но пусть будет
                 pos = emptyPos;
             }
         }
         return pos;
     }
-    int[] mergeCells(int[] cells1,int[] cells2) {
+
+    int[] mergeCells(int[] cells1, int[] cells2) {
         int[] cells = new int[]{};
-        for (int cellId:cells1) {
-            int pos = Arrays.binarySearch(cells2,cellId);
-            if (pos>-1) {
+        for (int cellId : cells1) {
+            int pos = Arrays.binarySearch(cells2, cellId);
+            if (pos > -1) {
                 cells = Arrays.copyOf(cells, cells.length + 1);
                 cells[cells.length - 1] = cellId;
             }
         }
-        return  cells;
+        return cells;
     }
 
     private int getBestPosition() {
         resetCellPriority();
         int[] playerCells = getBestCells(PLAYER_VALUE);
         int[] aiCells = getBestCells(AI_VALUE);
-        int[] aiAndPlayerCells = mergeCells(playerCells,aiCells);
+        int[] aiAndPlayerCells = mergeCells(playerCells, aiCells);
 
         int choosed = chooseFromCellArray(aiAndPlayerCells);
-        if (choosed>-1) return choosed;
+        if (choosed > -1) return choosed;
         choosed = chooseFromCellArray(playerCells);
-        if (choosed>-1) return choosed;
+        if (choosed > -1) return choosed;
         return chooseFromCellArray(aiCells);
 
     }
+
     int chooseFromCellArray(int[] array) {
-        if (array==null || array.length==0) return -1;
+        if (array == null || array.length == 0) return -1;
         return array[rand.nextInt(array.length)];
 
     }
+
     private void resetCellPriority() {
         for (int[] freecell : freeCells) {
             if (freecell == null) continue;
             freecell[IDX_PRIORITY] = 0;
         }
     }
+
     private int[] getBestCells(int value) {
-        int[][][] variants = (value==PLAYER_VALUE)?playerVariants:aiVariants;
+        int[][][] variants = (value == PLAYER_VALUE) ? playerVariants : aiVariants;
         //считаем приоритет
         //ищем самые опасные вражьи варианты
         int maxPriority = -1;
         int[][][] bestVariants = new int[][][]{};
-        for (int[][] variant:variants) {
-            if (variant==null) continue;
+        for (int[][] variant : variants) {
+            if (variant == null) continue;
             int priority = 0;
 
-            for (int[] cell:variant) {
-                if (cell[IDX_VALUE]==value) {
+            for (int[] cell : variant) {
+                if (cell[IDX_VALUE] == value) {
                     priority++;
                 }
 
             }
 
-            if (priority>maxPriority ) {
+            if (priority > maxPriority) {
                 bestVariants = new int[][][]{};
                 maxPriority = priority;
             }
-            if (priority>-1 && maxPriority==priority) {
+            if (priority > -1 && maxPriority == priority) {
                 bestVariants = Arrays.copyOf(bestVariants, bestVariants.length + 1);
-                bestVariants[bestVariants.length-1] = variant;
+                bestVariants[bestVariants.length - 1] = variant;
             }
         }
         maxPriority = 0;
-        for (int[][] variant:bestVariants) {
-            if (variant==null) continue;
-            for (int[] cell:variant) {
-                if (cell[IDX_VALUE]==EMPTY_VALUE) {
+        for (int[][] variant : bestVariants) {
+            if (variant == null) continue;
+            for (int[] cell : variant) {
+                if (cell[IDX_VALUE] == EMPTY_VALUE) {
                     cell[IDX_PRIORITY]++;
                     if (cell[IDX_PRIORITY] > maxPriority) maxPriority = cell[IDX_PRIORITY];
                 }
             }
         }
         int[] choice = new int[]{};
-        for (int[][] variant:bestVariants) {
-            if (variant==null) continue;
-            for (int[] cell:variant) {
-                if (cell[IDX_VALUE]==EMPTY_VALUE && cell[IDX_PRIORITY]==maxPriority) {
-                    if (Arrays.binarySearch(choice,cell[IDX_ADDRESS])<0) {
+        for (int[][] variant : bestVariants) {
+            if (variant == null) continue;
+            for (int[] cell : variant) {
+                if (cell[IDX_VALUE] == EMPTY_VALUE && cell[IDX_PRIORITY] == maxPriority) {
+                    if (Arrays.binarySearch(choice, cell[IDX_ADDRESS]) < 0) {
                         choice = Arrays.copyOf(choice, choice.length + 1);
                         choice[choice.length - 1] = cell[IDX_ADDRESS];
                     }
@@ -347,122 +351,13 @@ class Java1Homework4 {
         return choice;
     }
 
-    private int[] getBestEnemyCells() {
-        //считаем приоритет
-        //ищем самые опасные вражьи варианты
-        int maxPriority = -1;
-        int[] variants = new int[]{};
-        for (int i = 0;i<playerVariants.length;i++) {
-            int[][] variant = playerVariants[i];
-            if (variant==null) continue;
-            int priority = 0;
-            int toWin = WIN_SIZE;
-            for (int[] cell:variant) {
-                if (maxPriority == Integer.MAX_VALUE) break;
-                if (cell[IDX_VALUE]==1) {
-                    toWin--;
-                    priority++;
-                }
-                priority++;
-            }
-            if (toWin<WIN_SIZE/2 + 1) priority = Integer.MAX_VALUE;
-            if (priority>maxPriority ) {
-                variants = new int[]{};
-                maxPriority = priority;
-            }
-            if (priority>0 && maxPriority==priority) {
-                variants = Arrays.copyOf(variants, variants.length + 1);
-                variants[variants.length-1] = i;
-            }
-        }
-        for (int i = 0; i < variants.length; i++) {
-            int[][] variant = aiVariants[variants[i]];
-            if (variant==null) continue;
-            for (int[] cell:variant) {
-                cell[IDX_PRIORITY]++;
-            }
-        }
-
-        int[] choice = new int[]{};
-        for (int[] freecell:freeCells) {
-            if (freecell == null) continue;
-            int priority = 0;
-            for (int i = 0; i < variants.length; i++) {
-                int[][] variant = playerVariants[variants[i]];
-                for (int[] cell : variant) {
-                    if (cell == freecell) {
-                        choice = Arrays.copyOf(choice, choice.length + 1);
-                        choice[choice.length - 1] = cell[IDX_ADDRESS];
-                    }
-                }
-
-            }
-        }
-        return choice;
-    }
-    private int[] getBestAiCells() {
-        //считаем приоритет
-        //ищем самые опасные вражьи варианты
-        int maxPriority = -1;
-        int[] variants = new int[]{};
-        for (int i = 0;i<aiVariants.length;i++) {
-            if (maxPriority == Integer.MAX_VALUE) break;
-            int[][] variant = aiVariants[i];
-            if (variant==null) continue;
-            int priority = 0;
-            int toWin = WIN_SIZE;
-            for (int[] cell:variant) {
-                if (cell[IDX_VALUE]==2) {
-                    toWin--;
-                    priority++;
-                }
-                priority++;
-            }
-            if (toWin<WIN_SIZE/2 + 1) priority = Integer.MAX_VALUE/2;
-            if (toWin<2) priority = Integer.MAX_VALUE;
-
-            if (priority>maxPriority ) {
-                variants = new int[]{};
-                maxPriority = priority;
-            }
-            if (priority>0 && maxPriority==priority) {
-                variants = Arrays.copyOf(variants, variants.length + 1);
-                variants[variants.length-1] = i;
-            }
-        }
-        for (int i = 0; i < variants.length; i++) {
-            int[][] variant = aiVariants[variants[i]];
-            if (variant==null) continue;
-            for (int[] cell:variant) {
-                cell[IDX_PRIORITY]++;
-            }
-            System.out.println();
-        }
-        int[] choice = new int[]{};
-        for (int[] freecell:freeCells) {
-            if (freecell == null) continue;
-            int priority = 0;
-            for (int i = 0; i < variants.length; i++) {
-                int[][] variant = aiVariants[variants[i]];
-                if (variant==null) continue;
-                for (int[] cell : variant) {
-                    if (cell == freecell) {
-                        choice = Arrays.copyOf(choice, choice.length + 1);
-                        choice[choice.length - 1] = cell[IDX_ADDRESS];
-                    }
-                }
-
-            }
-        }
-        return choice;
-    }
     boolean checkWin(char dot) {
-        int[][][] array = (dot==DOT_X)? playerVariants:aiVariants;
-        for (int[][] variant:array) {
-            if (variant==null) break;
+        int[][][] array = (dot == DOT_X) ? playerVariants : aiVariants;
+        for (int[][] variant : array) {
+            if (variant == null) break;
             boolean win = true;
             for (int[] cell : variant) {
-                if (cell[0]==0) {
+                if (cell[0] == 0) {
                     win = false;
                     break;
                 }
@@ -473,7 +368,7 @@ class Java1Homework4 {
     }
 
 
-   boolean isMapFull() {
+    boolean isMapFull() {
         for (int i = 0; i < SIZE; i++)
             for (int j = 0; j < SIZE; j++)
                 if (map[i][j] == DOT_EMPTY)
