@@ -29,6 +29,8 @@ public class Java1Homework7 implements Runnable {
 
     @Override
     public void run() {
+        Plate plate = new Plate(100);
+        System.out.println(plate);
         List<Cat> cats = new ArrayList<Cat>();
         Random random = new Random();
         //Create cats
@@ -36,15 +38,14 @@ public class Java1Homework7 implements Runnable {
             cats.add(new Cat(String.format("Cat%s",i+1),random.nextInt(20)+5));
         }
         //Feed all cats
-        Plate plate = new Plate(100);
-        for (Cat cat:cats) {
-            cat.eat(plate);
-        }
-        //Show cats & plate
         int demand = 0;
         for (Cat cat:cats) {
-            System.out.println(cat);
+            cat.eat(plate);
             if (cat.isHungry()) demand+=cat.getAppetite();
+        }
+        //Show cats & plate
+        for (Cat cat:cats) {
+            System.out.println(cat);
         }
         System.out.println(plate);
         //Feed hungry cats
@@ -96,7 +97,8 @@ public class Java1Homework7 implements Runnable {
             this.appetite = appetite;
         }
         public void eat(Plate p) {
-            satiety|=p.removeFood(appetite);
+            if (!satiety)
+                satiety=p.removeFood(appetite);
         }
 
         public boolean isHungry() {
